@@ -1,0 +1,198 @@
+import tkinter as tk
+from tkinter import ttk
+
+# Base prices for products
+BASE_PRICES = {
+    "OG Kush": 39,
+    "Sour Diesel": 40,
+    "Green Crack": 43,
+    "Granddaddy Purple": 44,
+    "Meth": 70,
+    "Cocaine": 150
+}
+
+# Effects and their multipliers
+EFFECTS = {
+    "Anti-Gravity": 0.54,
+    "Athletic": 0.32,
+    "Balding": 0.30,
+    "Bright-Eyed": 0.40,
+    "Calming": 0.10,
+    "Calorie-Dense": 0.28,
+    "Cyclopean": 0.56,
+    "Disorienting": 0.00,
+    "Electrifying": 0.50,
+    "Energizing": 0.22,
+    "Euphoric": 0.18,
+    "Explosive": 0.00,
+    "Focused": 0.16,
+    "Foggy": 0.36,
+    "Gingeritis": 0.20,
+    "Glowing": 0.48,
+    "Jennerising": 0.42,
+    "Laxative": 0.00,
+    "Long Faced": 0.52,
+    "Munchies": 0.12,
+    "Paranoia": 0.00,
+    "Refreshing": 0.14,
+    "Schizophrenia": 0.00,
+    "Sedating": 0.26,
+    "Seizure-Inducing": 0.00,
+    "Shrinking": 0.60,
+    "Slippery": 0.34,
+    "Smelly": 0.00,
+    "Sneaky": 0.24,
+    "Spicy": 0.38,
+    "Thought-Provoking": 0.44,
+    "Toxic": 0.00,
+    "Tropic Thunder": 0.46,
+    "Zombifying": 0.58
+}
+
+# Default effects for substances
+DEFAULT_EFFECTS = {
+    "OG Kush": ["Calming"],
+    "Sour Diesel": ["Refreshing"],
+    "Green Crack": ["Energizing"],
+    "Granddaddy Purple": ["Sedating"],
+    "Addy": ["Thought-Provoking"],
+    "Banana": ["Gingeritis"],
+    "Battery": ["Bright-Eyed"],
+    "Chili": ["Spicy"],
+    "Cuke": ["Energizing"],
+    "Donut": ["Calorie-Dense"],
+    "Energy Drink": ["Athletic"],
+    "Flu Medicine": ["Sedating"],
+    "Gasoline": ["Toxic"],
+    "Horse Semen": ["Long Faced"],
+    "Iodine": ["Jennerising"],
+    "Mega Bean": ["Foggy"],
+    "Motor Oil": ["Slippery"],
+    "Mouth Wash": ["Balding"],
+    "Paracetamol": ["Sneaky"],
+    "Viagra": ["Tropic Thunder"]
+}
+
+# Function to process effects for a single substance
+def process_effects(substance, selected_effects):
+    # Add default effects
+    default_effects = DEFAULT_EFFECTS.get(substance, [])
+    updated_effects = set(selected_effects)
+    for effect in default_effects:
+        if len(updated_effects) < 8:  # Max 8 effects
+            updated_effects.add(effect)
+    return list(updated_effects)
+
+# Function to calculate the final price
+def calculate_mix():
+    selected_product = product_var.get()
+    selected_substances = [substance.get() for substance in substances_vars if substance.get()]
+    final_effects = []
+
+    for substance in selected_substances:
+        final_effects = process_effects(substance, final_effects)
+
+    # Calculate total multiplier
+    total_multiplier = sum(EFFECTS.get(effect, 0) for effect in final_effects)
+    base_price = BASE_PRICES[selected_product]
+    final_price = base_price * (1 + total_multiplier)
+
+    # Display results
+    mix_result_label.config(
+        text=f"Selected Product: {selected_product}\n"
+             f"Selected Substances: {', '.join(selected_substances)}\n"
+             f"Final Effects: {', '.join(final_effects)}\n"
+             f"Final Price: ${round(final_price)}"
+    )
+
+# Function to calculate reverse search results
+def calculate_reverse_search():
+    selected_product = reverse_product_var.get()
+    selected_effects = [effect for effect, var in effects_vars.items() if var.get()]
+
+    if not selected_effects:
+        reverse_result_label.config(text="No effects selected.")
+        return
+
+    # Calculate total multiplier
+    total_multiplier = sum(EFFECTS[effect] for effect in selected_effects)
+    base_price = BASE_PRICES[selected_product]
+    final_price = base_price * (1 + total_multiplier)
+    sell_value = final_price * 1.5  # Assuming a 50% markup
+
+    # Display results
+    reverse_result_label.config(
+        text=f"Selected Product: {selected_product}\n"
+             f"Selected Effects: {', '.join(selected_effects)}\n"
+             f"Cost: ${round(final_price)}\n"
+             f"Sell Value: ${round(sell_value)}"
+    )
+
+# Create the main Tkinter window
+root = tk.Tk()
+root.title("Schedule I: Substance Mix Calculator")
+
+# Tabs for Substance Mix Calculator and Reverse Search
+notebook = ttk.Notebook(root)
+notebook.pack(fill="both", expand=True)
+
+# Tab 1: Substance Mix Calculator
+mix_tab = ttk.Frame(notebook)
+notebook.add(mix_tab, text="Substance Mix Calculator")
+
+# Product selection
+product_var = tk.StringVar(value="OG Kush")
+ttk.Label(mix_tab, text="Select a Product:").pack(pady=5)
+product_dropdown = ttk.Combobox(mix_tab, textvariable=product_var, values=list(BASE_PRICES.keys()))
+product_dropdown.pack(pady=5)
+
+# Substances selection
+ttk.Label(mix_tab, text="Select Substances:").pack(pady=5)
+substances_frame = ttk.Frame(mix_tab)
+substances_frame.pack(pady=5)
+
+substances_vars = []
+for substance in DEFAULT_EFFECTS.keys():
+    var = tk.StringVar(value="")
+    substances_vars.append(var)
+    ttk.Checkbutton(substances_frame, text=substance, variable=var, onvalue=substance, offvalue="").pack(anchor="w")
+
+# Calculate button
+calculate_button = ttk.Button(mix_tab, text="Calculate Mix", command=calculate_mix)
+calculate_button.pack(pady=10)
+
+# Mix result label
+mix_result_label = ttk.Label(mix_tab, text="", justify="left")
+mix_result_label.pack(pady=10)
+
+# Tab 2: Reverse Search
+reverse_tab = ttk.Frame(notebook)
+notebook.add(reverse_tab, text="Reverse Search")
+
+# Product selection
+reverse_product_var = tk.StringVar(value="OG Kush")
+ttk.Label(reverse_tab, text="Select a Product:").pack(pady=5)
+reverse_product_dropdown = ttk.Combobox(reverse_tab, textvariable=reverse_product_var, values=list(BASE_PRICES.keys()))
+reverse_product_dropdown.pack(pady=5)
+
+# Effects selection
+ttk.Label(reverse_tab, text="Select Desired Effects:").pack(pady=5)
+effects_frame = ttk.Frame(reverse_tab)
+effects_frame.pack(pady=5)
+
+effects_vars = {}
+for effect, multiplier in EFFECTS.items():
+    var = tk.BooleanVar()
+    effects_vars[effect] = var
+    ttk.Checkbutton(effects_frame, text=f"{effect} (x{multiplier:.2f})", variable=var).pack(anchor="w")
+
+# Calculate button
+reverse_calculate_button = ttk.Button(reverse_tab, text="Search Substances", command=calculate_reverse_search)
+reverse_calculate_button.pack(pady=10)
+
+# Reverse search result label
+reverse_result_label = ttk.Label(reverse_tab, text="", justify="left")
+reverse_result_label.pack(pady=10)
+
+# Run the Tkinter event loop
+root.mainloop()
